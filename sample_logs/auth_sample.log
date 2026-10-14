@@ -1,0 +1,31 @@
+Oct 13 08:14:22 ubuntu sshd[801]: Failed password for invalid user admin from 192.0.2.77 port 41022 ssh2
+Oct 13 11:42:51 ubuntu sshd[902]: Failed password for root from 192.0.2.77 port 41873 ssh2
+Oct 13 15:03:09 ubuntu sshd[1010]: Failed password for invalid user test from 192.0.2.77 port 42210 ssh2
+Oct 13 19:27:44 ubuntu sshd[1105]: Failed password for root from 192.0.2.77 port 43005 ssh2
+Oct 13 21:55:12 ubuntu sshd[1190]: Failed password for samra from 192.168.1.10 port 50321 ssh2
+Oct 13 21:55:20 ubuntu sshd[1190]: Accepted password for samra from 192.168.1.10 port 50321 ssh2
+Oct 13 22:10:01 ubuntu sshd[1234]: Failed password for invalid user admin from 203.0.113.5 port 52144 ssh2
+Oct 13 22:10:09 ubuntu sshd[1236]: Failed password for root from 203.0.113.5 port 52150 ssh2
+Oct 13 22:10:17 ubuntu sshd[1238]: Failed password for invalid user test from 203.0.113.5 port 52156 ssh2
+Oct 13 22:10:25 ubuntu sshd[1240]: Failed password for invalid user oracle from 203.0.113.5 port 52162 ssh2
+Oct 13 22:10:33 ubuntu sshd[1242]: Failed password for invalid user postgres from 203.0.113.5 port 52168 ssh2
+Oct 13 22:10:41 ubuntu sshd[1244]: Failed password for invalid user user from 203.0.113.5 port 52174 ssh2
+Oct 13 22:10:49 ubuntu sshd[1246]: Failed password for root from 203.0.113.5 port 52180 ssh2
+Oct 13 22:10:57 ubuntu sshd[1248]: Failed password for invalid user admin from 203.0.113.5 port 52186 ssh2
+Oct 13 22:11:05 ubuntu sshd[1250]: Failed password for invalid user guest from 203.0.113.5 port 52192 ssh2
+Oct 13 22:11:13 ubuntu sshd[1252]: Failed password for root from 203.0.113.5 port 52198 ssh2
+Oct 13 22:11:21 ubuntu sshd[1254]: Failed password for invalid user support from 203.0.113.5 port 52204 ssh2
+Oct 13 22:11:29 ubuntu sshd[1256]: Failed password for invalid user test from 203.0.113.5 port 52210 ssh2
+Oct 13 22:30:02 ubuntu sshd[1301]: Failed password for invalid user admin from 198.51.100.23 port 40100 ssh2
+Oct 13 22:30:06 ubuntu sshd[1303]: Failed password for root from 198.51.100.23 port 40104 ssh2
+Oct 13 22:30:10 ubuntu sshd[1305]: Failed password for invalid user test from 198.51.100.23 port 40108 ssh2
+Oct 13 22:30:14 ubuntu sshd[1307]: Failed password for deploy from 198.51.100.23 port 40112 ssh2
+Oct 13 22:30:18 ubuntu sshd[1309]: Failed password for deploy from 198.51.100.23 port 40114 ssh2
+Oct 13 22:30:22 ubuntu sshd[1311]: Failed password for deploy from 198.51.100.23 port 40116 ssh2
+Oct 13 22:30:26 ubuntu sshd[1313]: Failed password for deploy from 198.51.100.23 port 40118 ssh2
+Oct 13 22:30:30 ubuntu sshd[1315]: Failed password for root from 198.51.100.23 port 40120 ssh2
+Oct 13 22:30:34 ubuntu sshd[1317]: Failed password for deploy from 198.51.100.23 port 40121 ssh2
+Oct 13 22:30:38 ubuntu sshd[1319]: Failed password for deploy from 198.51.100.23 port 40122 ssh2
+Oct 13 22:30:43 ubuntu sshd[1321]: Accepted password for deploy from 198.51.100.23 port 40123 ssh2
+Oct 13 22:40:05 ubuntu sudo: samra : TTY=pts/0 ; PWD=/home/samra ; USER=root ; COMMAND=/usr/bin/apt update
+Oct 13 22:45:30 ubuntu sshd[1400]: Accepted publickey for samra from 192.168.1.10 port 50400 ssh2
