@@ -7,6 +7,8 @@ YEAR = 2026  # auth.log has no year, so we add it ourselves
 FAIL_THRESHOLD = 5       # Step 4 rule: total failures
 WINDOW_MINUTES = 5       # Step 5 rule: size of the time window
 BURST_THRESHOLD = 10     # Step 5 rule: failures inside one window
+LOOKBACK_MINUTES = 10    # Step 6 rule: how far back to look before a success
+COMPROMISE_FAILS = 5     # Step 6 rule: failures before a success = suspicious
 
 PATTERN = re.compile(
     r"^(?P<month>\w{3})\s+(?P<day>\d+)\s+(?P<time>\d{2}:\d{2}:\d{2})\s+"
@@ -82,24 +84,62 @@ def find_bursts(events):
     return bursts
 
 
+def find_compromises(events):
+    """Find successful logins that came right after many failures from the same IP."""
+    lookback = timedelta(minutes=LOOKBACK_MINUTES)
+    failures_by_ip = defaultdict(list)  # failures seen so far, per IP
+    alerts = []
+
+    for e in sorted(events, key=lambda x: x["time"]):  # walk through time in order
+        if e["status"] == "Failed":
+            failures_by_ip[e["ip"]].append(e)
+        else:  # an Accepted login
+            recent = [
+                f for f in failures_by_ip[e["ip"]]
+                if e["time"] - f["time"] <= lookback
+            ]
+            if len(recent) >= COMPROMISE_FAILS:
+                alerts.append({
+                    "ip": e["ip"],
+                    "user": e["user"],
+                    "success_time": e["time"],
+                    "failures": len(recent),
+                    "first_failure": recent[0]["time"],
+                    "users_tried": sorted({f["user"] for f in recent}),
+                })
+    return alerts
+
+
 if __name__ == "__main__":
     events = parse_log(LOG_FILE)
     counts, users = count_failures(events)
     bursts = find_bursts(events)
+    compromises = find_compromises(events)
+    compromised_ips = {a["ip"] for a in compromises}
     total = sum(counts.values())
 
     print(f"Parsed {len(events)} events, {total} failed logins from {len(counts)} IPs")
     print(f"Rules: {FAIL_THRESHOLD}+ total failures | "
-          f"{BURST_THRESHOLD}+ failures within {WINDOW_MINUTES} min\n")
+          f"{BURST_THRESHOLD}+ failures within {WINDOW_MINUTES} min | "
+          f"success after {COMPROMISE_FAILS}+ failures\n")
 
-    print(f"{'IP':<16}{'TOTAL':>6}{'PEAK':>6}  {'COUNT RULE':<12}{'WINDOW RULE'}")
+    print(f"{'IP':<16}{'TOTAL':>6}{'PEAK':>6}  VERDICT")
     for ip, n in counts.most_common():
         peak = bursts[ip][0]
-        count_rule = "FLAGGED" if n >= FAIL_THRESHOLD else "ok"
-        window_rule = "BURST" if peak >= BURST_THRESHOLD else "ok"
-        print(f"{ip:<16}{n:>6}{peak:>6}  {count_rule:<12}{window_rule}")
+        if ip in compromised_ips:
+            verdict = "LIKELY COMPROMISE"
+        elif peak >= BURST_THRESHOLD:
+            verdict = "BRUTE FORCE (no success)"
+        elif n >= FAIL_THRESHOLD:
+            verdict = "SUSPICIOUS (many failures, not a burst)"
+        else:
+            verdict = "ok"
+        print(f"{ip:<16}{n:>6}{peak:>6}  {verdict}")
 
-    print("\nBursts detected:")
-    for ip, (peak, first, last) in bursts.items():
-        if peak >= BURST_THRESHOLD:
-            print(f"  {ip}: {peak} failures between {first} and {last}")
+    print("\nPossible compromises:")
+    if not compromises:
+        print("  none")
+    for a in compromises:
+        print(f"  {a['ip']} logged in as '{a['user']}' at {a['success_time']} "
+              f"after {a['failures']} failures (first at {a['first_failure']})")
+        print(f"    usernames tried: {', '.join(a['users_tried'])}")
