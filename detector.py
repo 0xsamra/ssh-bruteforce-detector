@@ -1,10 +1,12 @@
 import re
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 LOG_FILE = "sample_logs/auth_sample.log"
 YEAR = 2026  # auth.log has no year, so we add it ourselves
-FAIL_THRESHOLD = 5  # flag an IP with this many failures or more
+FAIL_THRESHOLD = 5       # Step 4 rule: total failures
+WINDOW_MINUTES = 5       # Step 5 rule: size of the time window
+BURST_THRESHOLD = 10     # Step 5 rule: failures inside one window
 
 PATTERN = re.compile(
     r"^(?P<month>\w{3})\s+(?P<day>\d+)\s+(?P<time>\d{2}:\d{2}:\d{2})\s+"
@@ -53,13 +55,51 @@ def count_failures(events):
     return counts, users
 
 
+def find_bursts(events):
+    """For each IP, find the most failures inside any WINDOW_MINUTES stretch.
+
+    Returns {ip: (peak_count, window_start, window_end)}.
+    """
+    window = timedelta(minutes=WINDOW_MINUTES)
+    times_by_ip = defaultdict(list)
+    for e in events:
+        if e["status"] == "Failed":
+            times_by_ip[e["ip"]].append(e["time"])
+
+    bursts = {}
+    for ip, times in times_by_ip.items():
+        times.sort()
+        best = (0, None, None)
+        start = 0  # left edge of the sliding window
+        for end in range(len(times)):
+            # move the left edge forward until the window fits
+            while times[end] - times[start] > window:
+                start += 1
+            count = end - start + 1
+            if count > best[0]:
+                best = (count, times[start], times[end])
+        bursts[ip] = best
+    return bursts
+
+
 if __name__ == "__main__":
     events = parse_log(LOG_FILE)
     counts, users = count_failures(events)
+    bursts = find_bursts(events)
     total = sum(counts.values())
 
-    print(f"Parsed {len(events)} events, {total} failed logins from {len(counts)} IPs\n")
-    print(f"{'IP':<16}{'FAILED':>7}  {'USERS':>5}  STATUS")
+    print(f"Parsed {len(events)} events, {total} failed logins from {len(counts)} IPs")
+    print(f"Rules: {FAIL_THRESHOLD}+ total failures | "
+          f"{BURST_THRESHOLD}+ failures within {WINDOW_MINUTES} min\n")
+
+    print(f"{'IP':<16}{'TOTAL':>6}{'PEAK':>6}  {'COUNT RULE':<12}{'WINDOW RULE'}")
     for ip, n in counts.most_common():
-        status = "FLAGGED" if n >= FAIL_THRESHOLD else "ok"
-        print(f"{ip:<16}{n:>7}  {len(users[ip]):>5}  {status}")
+        peak = bursts[ip][0]
+        count_rule = "FLAGGED" if n >= FAIL_THRESHOLD else "ok"
+        window_rule = "BURST" if peak >= BURST_THRESHOLD else "ok"
+        print(f"{ip:<16}{n:>6}{peak:>6}  {count_rule:<12}{window_rule}")
+
+    print("\nBursts detected:")
+    for ip, (peak, first, last) in bursts.items():
+        if peak >= BURST_THRESHOLD:
+            print(f"  {ip}: {peak} failures between {first} and {last}")
