@@ -1,10 +1,11 @@
 import re
+from collections import Counter, defaultdict
 from datetime import datetime
 
 LOG_FILE = "sample_logs/auth_sample.log"
 YEAR = 2026  # auth.log has no year, so we add it ourselves
+FAIL_THRESHOLD = 5  # flag an IP with this many failures or more
 
-# One pattern that matches both failed and accepted password lines
 PATTERN = re.compile(
     r"^(?P<month>\w{3})\s+(?P<day>\d+)\s+(?P<time>\d{2}:\d{2}:\d{2})\s+"
     r"\S+\s+sshd\[\d+\]:\s+"
@@ -42,8 +43,23 @@ def parse_log(path):
     return events
 
 
+def count_failures(events):
+    """Count failed logins per IP and collect the usernames each IP tried."""
+    failed = [e for e in events if e["status"] == "Failed"]
+    counts = Counter(e["ip"] for e in failed)
+    users = defaultdict(set)
+    for e in failed:
+        users[e["ip"]].add(e["user"])
+    return counts, users
+
+
 if __name__ == "__main__":
     events = parse_log(LOG_FILE)
-    print(f"Parsed {len(events)} events\n")
-    for e in events:
-        print(f"{e['time']}  {e['status']:<9} {e['user']:<10} {e['ip']}")
+    counts, users = count_failures(events)
+    total = sum(counts.values())
+
+    print(f"Parsed {len(events)} events, {total} failed logins from {len(counts)} IPs\n")
+    print(f"{'IP':<16}{'FAILED':>7}  {'USERS':>5}  STATUS")
+    for ip, n in counts.most_common():
+        status = "FLAGGED" if n >= FAIL_THRESHOLD else "ok"
+        print(f"{ip:<16}{n:>7}  {len(users[ip]):>5}  {status}")
