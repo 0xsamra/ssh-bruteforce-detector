@@ -1,0 +1,5 @@
+ip,failed_count,peak_in_window,first_seen,last_seen,usernames_tried,flagged,verdict
+203.0.113.5,12,12,2026-10-13 22:10:01,2026-10-13 22:11:29,admin; guest; oracle; postgres; root; support; test; user,yes,BRUTE FORCE (no success)
+198.51.100.23,10,10,2026-10-13 22:30:02,2026-10-13 22:30:38,admin; deploy; root; test,yes,LIKELY COMPROMISE
+192.0.2.77,4,1,2026-10-13 08:14:22,2026-10-13 19:27:44,admin; root; test,no,ok
+192.168.1.10,1,1,2026-10-13 21:55:12,2026-10-13 21:55:12,samra,no,ok
